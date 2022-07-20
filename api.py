@@ -46,5 +46,13 @@ def get_info_about_user():
         total_balance += pydantic_models.User(**user).balance
     return total_balance
 
+
+@api.get("/users/")
+def get_users(skip: int = 0, limit: int = 10): # Параметры skip и limit - МОГУТ присутствовать в запросе
+    # Чтобы сделать параметры обязательными ненужно указывать = value
+    # Пример вызова:
+    # /users?skip=1&limit=10
+    return fake_database['users'][skip: skip + limit]
+
 # Запуск сервера:
 # uvicorn api:api --reload
