@@ -7,23 +7,26 @@ import config
 
 api = fastapi.FastAPI()
 
-response = {"Ответ":"Который возвращает сервер"}
-
 # Ответы на GET апросы, что указаны в декораторах
 
-@api.get('/')
-def index():
-    return response
-
-@api.get('/hello')
+@api.get('/static/path')
 def hello():
     return "hello"
 
-@api.get('/about/us')
-def about():
-    return {"We Are":"Legion"}
+@api.get('/user/{nick}') # Пер. в пути
+def get_nick(nick):
+    return {"user":nick}
 
-# Ввести команды в терминале проекта
-# pip install uvicorn
+@api.get('/userid/{id:int}') # Пер. с заданным типом данных
+def get_id(id):
+    return {"user":id}
+
+@api.get('/test/{id:int}/{text:str}/{custom_path:path}') # Несколько пер. в запросе # http://127.0.0.1:8000/test/24/gleb/my/path
+def get_test(id, text, custom_path):
+    return {"id":id,
+            "":text,
+            "custom_path": custom_path}
+
+# Для запуска сервера:
 # uvicorn app:api --reload
 
