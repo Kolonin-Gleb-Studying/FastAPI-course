@@ -1,35 +1,73 @@
 import fastapi
+from fastapi import Request # Перехват запроса и получение всей информации по нему
 import database # Импорт папки
 import pydantic_models
 import config
+import copy
 
 api = fastapi.FastAPI()
+
+@api.get('/')
+@api.post('/')
+@api.put('/')
+@api.delete('/')
+def index(request: Request): # request - объект со всей инфой о запросе
+    return {"Request": [request.method, request.headers]}
 
 # Словарь вида:
 # ключ: список (словарей)
 fake_database = {'users':[
-
     {
-        "id":1,             # число
-        "name":"Anna",      # строка
-        "nick":"Anny42",    # строка
-        "balance": 15300    # int
+        "id":1,
+        "name":"Anna",
+        "nick":"Anny42",
+        "balance": 15300
      },
 
     {
-        "id":2,             # число
-        "name":"Dima",      # строка
-        "nick":"dimon2319", # строка
-        "balance": 160.23   # float
+        "id":2,
+        "name":"Dima",
+        "nick":"dimon2319",
+        "balance": 160.23
      }
     ,{
-        "id":3,             # число
-        "name":"Vladimir",  # строка
-        "nick":"Vova777",   # строка
-        "balance": "25000"     # строка - НЕВЕРНО
+        "id":3,
+        "name":"Vladimir",
+        "nick":"Vova777",
+        "balance": 200.1
      }
 ],}
 
+''' POST - запросы'''
+# Создание/Добавление пользователя
+@api.post('/user/create')
+def index(user: pydantic_models.User): # Запрос получает объект user и сравнивает его с pydantic моделью. Если всё ок, user попадает в БД
+    fake_database['users'].append(user)
+    return {'User Created!': user}
+
+''' PUT - запросы'''
+# Обновление/Изменение пользователя
+@api.put('/user/{user_id}')
+def update_user(user_id: int, user: pydantic_models.User = fastapi.Body()): # используя fastapi.Body() мы явно указываем, что отправляем информацию в теле запроса
+    for index, u in enumerate(fake_database['users']): # так как в нашей бд юзеры хранятся в списке, нам нужно найти их индексы внутри этого списка
+        if u['id'] == user_id:
+            fake_database['users'][index] = user # обновляем юзера в бд по соответствующему ему индексу из списка users
+            return user
+
+''' DELETE - запросы'''
+# Удаление пользователя
+@api.delete('/user/{user_id}')
+def update_user(user_id: int = fastapi.Path()): # используя fastapi.Path() мы явно указываем, что переменную нужно брать из пути
+    for index, u in enumerate(fake_database['users']): # так как в нашей бд юзеры хранятся в списке, нам нужно найти их индексы внутри этого списка
+        if u['id'] == user_id:
+            old_db = copy.deepcopy(fake_database) # делаем полную копию объекта в переменную old_db, чтобы было с чем сравнить
+            del fake_database['users'][index]    # удаляем юзера из бд
+            return {'old_db' : old_db,
+                    'new_db': fake_database}
+
+
+''' GET - запросы'''
+# Получение информации
 @api.get('/get_info_by_user_id/{id:int}')
 def get_info_about_user(id):
     return fake_database['users'][id-1]
